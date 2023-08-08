@@ -109,19 +109,31 @@ pub struct Booking {
     pub flight_number: String,
     pub passenger_name: String,
     pub email: String,
+    pub amount: f64,
+    pub payment_details:Option<Payment>
 }
 
-impl Booking {
-    pub fn new(data:&Booking)->Self{
-        let my_uuid = Uuid::new_v4() ;
-        Self{
-            flight_number:data.flight_number.clone(),
-            email:data.email.clone(),
-            passenger_name:data.passenger_name.clone(),
-            id:my_uuid.to_string()
-        }
-    }
+#[derive(Debug, Deserialize, Serialize,Clone)]
+
+pub struct Payment {
+    pub id: String,
+    pub transaction_reference:  String,
+    pub amount: f64,
+    pub currency: String,
+    pub email: String,
+    pub timestamp: String,
 }
+// impl Booking {
+//     pub fn new(data:&Booking)->Self{
+//         let my_uuid = Uuid::new_v4() ;
+//         Self{
+//             flight_number:data.flight_number.clone(),
+//             email:data.email.clone(),
+//             passenger_name:data.passenger_name.clone(),
+//             id:my_uuid.to_string()
+//         }
+//     }
+// }
 
 pub struct FlightQueryParams {
     pub departure_city: String,
@@ -132,3 +144,11 @@ pub struct FlightQueryParams {
 }
 
 
+
+#[derive(Debug, Deserialize, Serialize,Clone)]
+
+pub struct FlightIdData {
+    pub flight_id:String,
+    pub passenger_name: String,
+    pub email: String,
+}

@@ -1,12 +1,15 @@
-use rocket::{data::Limits, State, serde::json::Json};
+use std::convert::Infallible;
 
-use crate::{module::{response_handler::{generic_response, CustomError, CustomResult}, route_structure::{ApiResponse, FlightQueryParams, Booking}}, controller, model::AppState};
+use rocket::{data::Limits, State, serde::json::Json, http::hyper::{Response, Body}};
+
+use crate::{module::{response_handler::{generic_response, CustomError, CustomResult}, route_structure::{ApiResponse, FlightQueryParams, Booking, FlightIdData}}, controller, model::AppState};
 
 
 
- 
+use rocket::response::content::RawHtml;
 
-#[get("/flight_schedule?<destination_city>&<departure_city>&<date>&<limit>&<page>" )]
+
+#[get("/flights?<destination_city>&<departure_city>&<date>&<limit>&<page>" )]
 pub async fn get_flight_schedule(
         db:&State<AppState>,
         departure_city:Option<String>,
@@ -32,15 +35,14 @@ pub async fn get_flight_schedule(
            None
        ))
 }
-#[post("/book_flight",data="<data>" )]
-pub async fn book_flight(
-        db:&State<AppState>,
-        data:Json<Booking>
 
+#[post("/flight/option" )]
+pub async fn flight_option(
+        db:&State<AppState>,
 ) -> Result<CustomResult, CustomError>{
-    let response  = controller::book_flight(
+    let response  = controller::flight_option(
         db,
-        data
+        // data
     ).await?;
     Ok(generic_response::<ApiResponse>(
             "Data retrieved successfully.",
@@ -49,3 +51,48 @@ pub async fn book_flight(
            None
        ))
 }
+
+
+#[post("/booking", data="<payload>" )]
+pub async fn booking(
+        db:&State<AppState>,
+        payload:Json<FlightIdData>
+) -> Result<CustomResult, CustomError>{
+    let booking_id  = controller::booking(
+        db,
+        payload
+    ).await?;
+    Ok(generic_response::<ApiResponse>(
+            format!("Booking confirmed for flight {}. Please proceed to payment.",booking_id).as_str(),
+           None,
+           None
+       ))
+}
+
+
+#[get("/initialize_payment/<booking_id>", )]
+pub async fn payment_initiate(
+        db:&State<AppState>,
+        booking_id:String
+) -> Result<CustomResult, CustomError>{
+    let payment_link  = controller::payment_initiate(
+        db,
+        booking_id
+    ).await?;
+    Ok(generic_response::<String>(
+            "Payment link initialized successfully",
+           Some(payment_link),
+           None
+       ))
+}
+
+#[get("/payment/<payment_id>", )]
+pub async fn get_payment_page(
+        db:&State<AppState>,
+        payment_id:String)
+ ->RawHtml<&str>
+{ 
+       let response = controller::get_payment_page(db).await;
+RawHtml(&response) 
+}
+

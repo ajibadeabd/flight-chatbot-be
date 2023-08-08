@@ -1,8 +1,10 @@
-use chrono::{format, Utc, Duration};
-use reqwest::Client;
-use rocket::{State, serde::json::Json};
+use std::convert::Infallible;
 
-use crate::{module::{route_structure::{ApiResponse, FlightQueryParams, FlightData, Booking}, response_handler::CustomError}, model::AppState,  };
+use chrono::{format, Utc, Duration};
+use reqwest::{Client, StatusCode };
+use rocket::{State, serde::json::Json, http::hyper::{Response ,Body}};
+
+use crate::{module::{route_structure::{ApiResponse, FlightQueryParams, FlightData, Booking, FlightIdData, Payment}, response_handler::CustomError}, model::AppState,  };
 use serde_json::from_str;
 
 use uuid::Uuid;
@@ -89,28 +91,125 @@ async  fn fetch_flight_data(db:&State<AppState>,limit:Option<String>)
 Ok(data)
 
 }
-pub async  fn book_flight(
+pub async  fn flight_option(
     db:&State<AppState>,
-     data:Json<Booking>
     )
  ->Result<(), CustomError>
 {
    let  flight_data = fetch_flight_data(db,Some("100".to_owned())).await?;
 
    let is_flight_available = flight_data.iter()
-   .find(|&each_flight_data| each_flight_data.flight.number.as_ref()  == Some(&data.flight_number) );
+   .find(|&each_flight_data| each_flight_data.flight.number.as_ref()  == Some(&"11".to_owned()) );
     match is_flight_available {
         Some(dat)=>{
 
-            let new_booking = Booking::new(&data);
+            // data==
+
+            // let new_booking = Booking::new(&data);
                 
-            println!("{:?}",new_booking);
+            // println!("{:?}",new_booking);
            Ok( ())
 
         },
-     None=>return Err(CustomError::BadRequest("Flight not found".to_owned()))
+     None=>return Err(CustomError::BadRequest("Flight details  not found".to_owned()))
             
     }
 
+
+}
+
+pub async  fn booking(
+    db:&State<AppState>,
+    payload:Json<FlightIdData>
+    )
+ ->Result<String, CustomError>
+{
+   let  flight_data = fetch_flight_data(db,Some("100".to_owned())).await?;
+
+   let is_flight_available = flight_data.iter()
+   .find(|&each_flight_data| each_flight_data.flight.number.as_ref()  == Some(&payload.flight_id) );
+    match is_flight_available {
+        Some(dat)=>{
+            let booking_id = Uuid::new_v4().to_string();
+            let new_booking = Booking {
+                flight_number:payload.flight_id.to_owned(),
+                email:payload.email.to_owned(),
+                passenger_name:payload.passenger_name.to_owned(),
+                id:booking_id.clone(),
+                payment_details:None,
+                amount:700.10
+            };
+           println!("{:?}",new_booking);
+            db.booking_db.lock().unwrap().push(new_booking);
+           Ok(booking_id)
+
+        },
+     None=>return Err(CustomError::BadRequest("Flight details  not found".to_owned()))
+            
+    }
+
+
+}
+pub async  fn payment_initiate(
+    db:&State<AppState>,
+    booking_id:String
+    )
+ ->Result<String, CustomError>
+{
+
+    let valid_booking = db.booking_db.lock().unwrap().iter().find(
+        |each_booking| each_booking.id==booking_id).cloned();
+
+    match &valid_booking {
+        Some(data)=>{
+            let payment_id = Uuid::new_v4().to_string();
+
+
+            let payment = Payment {
+                email:data.email.to_owned(),
+                currency:String::from("USD"),
+                id:payment_id,
+                timestamp:Utc::now().to_string(),
+                amount:data.amount,
+                transaction_reference:data.id.to_owned()
+            };
+            let mut  payment_link = format!("http://localhost:8000/payment/{}",payment.id);
+            let duplicate_transaction = db.payment_db.lock().unwrap().iter().find(
+                |payment| payment.transaction_reference ==payment.transaction_reference
+            ).cloned();
+            if let Some(duplicate_payment) =  duplicate_transaction {
+                payment_link  = format!("http://localhost:8000/payment/{}",duplicate_payment.id);
+               return Ok(payment_link)            
+            }
+            db.payment_db.lock().unwrap().push(payment);
+            Ok(payment_link)            
+        },
+        _=>return Err(CustomError::BadRequest("Invalid booking id.".to_owned()))
+    }
+
+
+}
+
+
+pub async  fn get_payment_page(
+    db:&State<AppState>,
+    payment_id:String
+    )
+//  ->Result<(), CustomError>
+->&str
+{
+    let valid_payment = db.payment_db.lock().unwrap().iter().find(
+        |payment_data| payment_data.id==payment_id).cloned(); 
+        if let None = &valid_payment {
+            let response_body = "<html><body><h1>Invalid payment link.</h1></body></html>";
+            // let response = Response::builder()
+            // .status(StatusCode::BAD_REQUEST)
+            // .body(Body::from(response_body))
+            // .unwrap();
+        return response_body;
+        }
+        let response_body = "<html><body><h1>Payment page content.</h1></body></html>";
+    // let response = Response::new(Body::from(response_body));
+    response_body
 
 }
