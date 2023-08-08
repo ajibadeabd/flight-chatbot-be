@@ -1,6 +1,6 @@
-use rocket::{data::Limits, State};
+use rocket::{data::Limits, State, serde::json::Json};
 
-use crate::{module::{response_handler::{generic_response, CustomError, CustomResult}, route_structure::{ApiResponse, FlightQueryParams}}, controller, model::AppState};
+use crate::{module::{response_handler::{generic_response, CustomError, CustomResult}, route_structure::{ApiResponse, FlightQueryParams, Booking}}, controller, model::AppState};
 
 
 
@@ -29,6 +29,23 @@ pub async fn get_flight_schedule(
     Ok(generic_response::<ApiResponse>(
             "Data retrieved successfully.",
            Some(response),
+           None
+       ))
+}
+#[post("/book_flight",data="<data>" )]
+pub async fn book_flight(
+        db:&State<AppState>,
+        data:Json<Booking>
+
+) -> Result<CustomResult, CustomError>{
+    let response  = controller::book_flight(
+        db,
+        data
+    ).await?;
+    Ok(generic_response::<ApiResponse>(
+            "Data retrieved successfully.",
+           None,
+        //    Some(response),
            None
        ))
 }

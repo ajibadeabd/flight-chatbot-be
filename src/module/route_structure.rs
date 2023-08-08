@@ -1,4 +1,6 @@
 // crate::module;
+use uuid::Uuid;
+
 
 use serde::{Serialize, Deserialize};
 
@@ -101,16 +103,25 @@ pub struct ApiResponse {
     // Add other fields as needed
 }
 
-// #[derive(Debug, Deserialize, Serialize)]
 #[derive(Debug, Deserialize, Serialize,Clone)]
-
 pub struct Booking {
-    id: u32,
-    flight: Flight,
-    passenger_name: Option<String>,
-    email:  Option<String>,
+    pub id:  String,
+    pub flight_number: String,
+    pub passenger_name: String,
+    pub email: String,
 }
 
+impl Booking {
+    pub fn new(data:&Booking)->Self{
+        let my_uuid = Uuid::new_v4() ;
+        Self{
+            flight_number:data.flight_number.clone(),
+            email:data.email.clone(),
+            passenger_name:data.passenger_name.clone(),
+            id:my_uuid.to_string()
+        }
+    }
+}
 
 pub struct FlightQueryParams {
     pub departure_city: String,
