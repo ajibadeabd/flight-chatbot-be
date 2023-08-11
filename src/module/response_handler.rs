@@ -13,7 +13,7 @@ pub struct ErrorResponse {
 }
 
  
-#[derive(Serialize)]
+#[derive(Serialize,Deserialize)]
 pub struct GenericResponse<T> {
     pub status: String,
     pub message: String,

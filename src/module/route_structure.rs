@@ -177,7 +177,7 @@ pub struct PaymentCallbackUrl {
     pub payment_id: String
 }
 
-#[derive(  Serialize )]
+#[derive( Deserialize, Serialize ,Debug)]
 pub struct BookingResponse {
     pub booking_id: String
 }

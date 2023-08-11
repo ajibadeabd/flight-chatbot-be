@@ -6,6 +6,8 @@ mod module;
 mod controller;
 mod route;
 
+use std::fmt;
+
 use crate::route::{
     get_flight_schedule,
     booking,
@@ -19,6 +21,24 @@ use crate::module::error_handler::{
 
 };
 use module::cors::make_cors;
+
+
+
+struct Person {
+    name: String,
+    age: u32,
+}
+
+impl  Person {
+    fn fmt(&self)->String{
+       format!("Name: {},\nAge: {},", self.name, self.age)
+    }
+}
+
+
+
+
+
  
 #[launch]
 pub fn rocket() -> _ {
