@@ -15,5 +15,5 @@ Before you begin, make sure you have Rust and Cargo installed on your system. Yo
 Clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/your-username/rocket-server.git
+git clone https://[github.com/your-username/rocket-server.git](https://github.com/ajibadeabd/flight-chatbot-be)https://github.com/ajibadeabd/flight-chatbot-be
 cd rocket-server
