@@ -17,3 +17,27 @@ Clone this repository to your local machine:
 ```bash
 git clone  https://github.com/ajibadeabd/flight-chatbot-be
 cd rocket-server
+```
+
+
+### Running the Rocket Server
+
+To start the Rocket server, run the following command:
+
+```bash
+git clone  https://github.com/ajibadeabd/flight-chatbot-be
+cd flight-chatbot-be
+```
+
+This will compile and launch the server. Open your web browser and navigate to http://localhost:8000 to view the server in action.
+
+
+
+
+### Running Tests
+
+To run tests for the Rocket server, use the following command::
+
+```bash
+cargo test
+```
