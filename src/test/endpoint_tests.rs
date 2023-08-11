@@ -79,7 +79,6 @@ fn test_get_payment_page() {
     let  expected_response_body = "<html><body><h1>Invalid payment link.</h1></body></html>".to_owned();
 
     assert_eq!(response.into_string().unwrap(), expected_response_body);
-    // Add more assertions for response body or other details if needed
 }
 
 #[test]
