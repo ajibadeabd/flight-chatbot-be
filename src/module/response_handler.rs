@@ -104,7 +104,7 @@ pub fn generic_response<T>(message: &str, data: Option<T>,code:Option<u16>) -> C
 where
     T: serde::Serialize,
 {
-    let response_json = GenericResponse {
+    let response_json: GenericResponse<Option<T>> = GenericResponse {
         message: message.to_string(),
         status: "success".to_string(),
         data,

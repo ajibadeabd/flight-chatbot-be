@@ -1,8 +1,14 @@
 // crate::module;
 use uuid::Uuid;
 
+///  Will be important for validation....
+use rocket_validation::{Validate, Validated};
 
+use std::{fmt, convert::Infallible};
 use serde::{Serialize, Deserialize};
+use rocket::{http::{uri::fmt::{UriDisplay, Query, Formatter,FromUriParam,},   Status},};
+use rocket::request::{Outcome, FromRequest};
+use rocket::{Request, Data, State};
 
 #[derive(Debug, Deserialize, Serialize,Clone)]
 pub struct Pagination {
@@ -121,27 +127,39 @@ pub struct Payment {
     pub amount: f64,
     pub currency: String,
     pub email: String,
+    pub status: TransactionType,
     pub timestamp: String,
 }
-// impl Booking {
-//     pub fn new(data:&Booking)->Self{
-//         let my_uuid = Uuid::new_v4() ;
-//         Self{
-//             flight_number:data.flight_number.clone(),
-//             email:data.email.clone(),
-//             passenger_name:data.passenger_name.clone(),
-//             id:my_uuid.to_string()
-//         }
-//     }
-// }
 
-pub struct FlightQueryParams {
-    pub departure_city: String,
-    pub destination_city: String,
-    pub date: String,
-    pub page: String,
-    pub limit:String
+#[derive(Debug, Clone,  Serialize,  Deserialize,PartialEq)]
+pub enum TransactionType {
+    // #[serde(rename = "deposit")]
+     SUCCESS,
+    // #[serde(rename = "withdrawal")]
+     FAILED,
+    // #[serde(rename = "transfer")]
+    PENDING,
 }
+
+// #[derive(FromForm,Seri)]
+#[derive(Debug,FromForm, Deserialize, Serialize,Clone,Validate)]
+///  Implements `Validate`
+#[serde(crate = "rocket::serde")]
+pub struct FlightQueryParams {
+    pub departure_city: Option<String>,
+    pub destination_city: Option<String>,
+
+    //#[validate(length(min = 1))] 
+    pub date: Option<String>,
+   // #[validate(range(min = 0, max = 100))]
+    pub page: Option<i32>,
+   // #[validate(range(min = 0, max = 100))]
+    pub limit:Option<i32>,
+}
+
+
+
+
 
 
 
@@ -151,4 +169,90 @@ pub struct FlightIdData {
     pub flight_id:String,
     pub passenger_name: String,
     pub email: String,
+}
+
+#[derive(Debug, Deserialize, Serialize,Clone)]
+
+pub struct PaymentCallbackUrl {
+    pub payment_id: String
+}
+
+#[derive(  Serialize )]
+pub struct BookingResponse {
+    pub booking_id: String
+}
+
+
+
+
+impl FromUriParam<Query, (&str, &str, &str,  &i32,  &i32)> for FlightQueryParams {
+    type Target = FlightQueryParams;
+
+    fn from_uri_param(
+        (departure_city, destination_city, date, page, limit): (&str, &str, &str,   &i32, &i32),
+    ) -> FlightQueryParams {
+        FlightQueryParams {
+            departure_city: Some(departure_city.to_owned()),
+            destination_city: Some(destination_city.to_owned()),
+            date: Some(date.to_owned()),
+            page: Some(page.to_be()),
+            limit: Some(limit.to_be()),
+        }
+    }
+}
+
+
+
+impl UriDisplay<Query> for FlightQueryParams {
+    fn fmt(&self, f: &mut Formatter<Query>) -> fmt::Result {
+        f.write_named_value("departure_city", &self.departure_city)?;
+        f.write_named_value("destination_city", &self.destination_city)?;
+        f.write_named_value("date", &self.date)?;
+        f.write_named_value("page", &self.page)?;
+        f.write_named_value("limit", &self.limit)
+    }
+}
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for FlightQueryParams {
+    // type Error = Infallible;
+    type Error = ();
+
+    // async fn from_request(req: &'r Request<'_>) -> rocket::request::Outcome<Self, Self::Error> {
+    async fn from_request(req: &'r Request<'_>) ->  Outcome<Self, ()> {
+         
+        // For example:
+        let departure_city = req.query_value("departure_city").and_then(|v| v.ok());
+        let destination_city = req.query_value("destination_city").and_then(|v| v.ok());
+        let date = req.query_value("date").and_then(|v| v.ok());
+        let limit = req.query_value("limit").and_then(|v| v.ok()); // Use "limit" here
+        let page = req.query_value("page").and_then(|v| v.ok()); // Use "page" here
+        
+        let flight_query_params = FlightQueryParams {
+            departure_city: departure_city.unwrap_or_default(),
+            destination_city: destination_city.unwrap_or_default(),
+            limit: limit.unwrap_or_default(),
+            page: page.unwrap_or_default(),
+            date: date.unwrap_or_default(),
+        };
+
+        // Return Outcome::Success with the created instance
+        Outcome::Success(flight_query_params)
+
+    }
+}
+
+
+
+ 
+
+#[derive(Debug,Serialize,Deserialize)]
+pub struct FlightOption {
+    // pub option_number: usize,
+    pub flight_date: Option<String>,
+    pub scheduled_departure: Option<String>,
+    pub scheduled_arrival: Option<String>,
+    pub departure_airport: Option<String>,
+    pub arrival_airport: Option<String>,
+    pub airline_name: Option<String>,
+    pub flight_number: Option<String>,
 }

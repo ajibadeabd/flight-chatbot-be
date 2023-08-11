@@ -1,53 +1,28 @@
-use std::convert::Infallible;
 
-use rocket::{data::Limits, State, serde::json::Json, http::hyper::{Response, Body}};
+use rocket::{ State, serde::json::Json};
+ 
 
-use crate::{module::{response_handler::{generic_response, CustomError, CustomResult}, route_structure::{ApiResponse, FlightQueryParams, Booking, FlightIdData}}, controller, model::AppState};
+use crate::{module::{response_handler::{generic_response, CustomError, CustomResult}, route_structure::{ApiResponse, FlightQueryParams, Booking, FlightIdData, PaymentCallbackUrl, BookingResponse, FlightOption}}, controller, model::AppState};
 
-
+// use crate::module::route_structure::Use;
 
 use rocket::response::content::RawHtml;
 
-
-#[get("/flights?<destination_city>&<departure_city>&<date>&<limit>&<page>" )]
+// #[get("/flights<user..>" )]
+#[get("/flights?<params..>")]
 pub async fn get_flight_schedule(
         db:&State<AppState>,
-        departure_city:Option<String>,
-        destination_city:Option<String>,
-        date:Option<String>,
-        limit:Option<i32>,
-        page:Option<i32>,
+        
+        params: FlightQueryParams
 
 ) -> Result<CustomResult, CustomError>{
-    let response  = controller::get_flight_schedule(
+    let response: Vec<FlightOption>  = controller::get_flight_schedule(
         db,
-        FlightQueryParams{
-                departure_city:departure_city.unwrap_or("".to_owned()),
-                destination_city:  destination_city.unwrap_or("".to_owned()),
-                date:date.unwrap_or("".to_owned()),
-                page:page.unwrap_or(1).to_string(),
-                limit:limit.unwrap_or(10).to_string(),
-        }
+        params,
     ).await?;
-    Ok(generic_response::<ApiResponse>(
+    Ok(generic_response::<Vec<FlightOption>>(
             "Data retrieved successfully.",
            Some(response),
-           None
-       ))
-}
-
-#[post("/flight/option" )]
-pub async fn flight_option(
-        db:&State<AppState>,
-) -> Result<CustomResult, CustomError>{
-    let response  = controller::flight_option(
-        db,
-        // data
-    ).await?;
-    Ok(generic_response::<ApiResponse>(
-            "Data retrieved successfully.",
-           None,
-        //    Some(response),
            None
        ))
 }
@@ -62,9 +37,11 @@ pub async fn booking(
         db,
         payload
     ).await?;
-    Ok(generic_response::<ApiResponse>(
+    Ok(generic_response::<BookingResponse>(
             format!("Booking confirmed for flight {}. Please proceed to payment.",booking_id).as_str(),
-           None,
+           Some(BookingResponse{
+            booking_id:booking_id
+           }),
            None
        ))
 }
@@ -73,7 +50,8 @@ pub async fn booking(
 #[get("/initialize_payment/<booking_id>", )]
 pub async fn payment_initiate(
         db:&State<AppState>,
-        booking_id:String
+        booking_id:String,
+
 ) -> Result<CustomResult, CustomError>{
     let payment_link  = controller::payment_initiate(
         db,
@@ -90,9 +68,21 @@ pub async fn payment_initiate(
 pub async fn get_payment_page(
         db:&State<AppState>,
         payment_id:String)
- ->RawHtml<&str>
+ ->RawHtml<String>
 { 
-       let response = controller::get_payment_page(db).await;
-RawHtml(&response) 
+    RawHtml(controller::get_payment_page(db,payment_id).await)
+}
+
+#[post("/payment",data = "<data>" )]
+pub async fn post_payment_page(
+        db:&State<AppState>,
+        data:Json<PaymentCallbackUrl>
+) -> Result<CustomResult, CustomError>{
+       let response =  controller::make_payment_page(db, &data).await?;
+       Ok(generic_response::<String>(
+         "Payment made successfully.",
+       None,
+       None
+   ))
 }
 
