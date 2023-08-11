@@ -1,19 +1,12 @@
-use std::convert::Infallible;
 
-use chrono::{format, Utc, Duration};
-use reqwest::{Client, StatusCode };
-use rocket::{State, serde::json::Json, http::hyper::{Response ,Body}};
+use chrono::{ Utc};
+use rocket::{State, serde::json::Json};
 
-use crate::{module::{route_structure::{ApiResponse, FlightQueryParams, FlightData, Booking, FlightIdData, Payment, TransactionType, PaymentCallbackUrl, FlightOption}, response_handler::CustomError}, model::AppState,  };
-use serde_json::from_str;
+use crate::{module::{route_structure::{ FlightQueryParams, FlightData, Booking, FlightIdData, Payment, TransactionType, PaymentCallbackUrl, FlightOption}, response_handler::CustomError}, model::AppState,  };
 
 use uuid::Uuid;
 
-
-use std::fs::File;
-use std::io::{self, Read};
-use serde_json::{ Error};
-
+ 
 
 
 pub async  fn get_flight_schedule(
@@ -22,7 +15,6 @@ pub async  fn get_flight_schedule(
 ->Result<Vec<FlightOption>, CustomError>
 {
     let flight_data: Vec<FlightData>  = db.flight_data_db.lock().unwrap().data.clone();
-    // let skip = (flight_query_params.page.unwrap()-1) * flight_query_params.limit.unwrap();
     let skip = (flight_query_params.page.unwrap_or(1) - 1) * flight_query_params.limit.unwrap_or(50);
 
     
@@ -88,50 +80,8 @@ pub async  fn get_flight_schedule(
 }
 
 
-
-
-// async  fn fetch_flight_data(db:&State<AppState>,limit:Option<i32>)
-// ->Result<Vec<FlightData>, CustomError>
-// {
-
-//     let mut flight_data: Vec<FlightData>  = db.flight_data_db.lock().unwrap().data.clone();
-//     let mut cache_date  = db.flight_data_db.lock().unwrap().cache_date.clone();
-//    // println!("{:?}",booking_data);
-
-
-
-//     let data:Vec<FlightData>;
-//         if flight_data.is_empty() || cache_date < Utc::now() {
-//         // make api call
-//     let client = Client::new();
-//     let  mut url = "http://api.aviationstack.com/v1/flights?access_key=99951e2bd5da8ce77ad3ab3fdf3209d6".to_owned();
-//     url = url  + &format!("&limit={}", &limit.unwrap_or(100));
-
-
-
-
-//     // flight_date
-//     let response_data = client.get(url)
-//     .send().await.expect("Error calling flight service");
-//     if response_data.status().is_success() == false {
-//     let response  = response_data.text().await.unwrap();
-//     println!("{:?}",response);
  
-//             return Err(CustomError::BadRequest("Flight schedule services not available at the moment. please try again".to_owned()));
-//     }
-//     let response  = response_data.text().await.unwrap();
  
-//     let initialize_response:ApiResponse = from_str(&response).unwrap();
-   
-//         db.flight_data_db.lock().unwrap().data= initialize_response.data.clone();
-//         db.flight_data_db.lock().unwrap().cache_date= Utc::now() + Duration::hours(10);
-//        data = initialize_response.data.clone();
-//     }else{
-//     data =  flight_data ;
-// }
-// Ok(data)
-
-// }
 pub async  fn booking(
     db:&State<AppState>,
     payload:Json<FlightIdData>
@@ -216,16 +166,14 @@ pub async  fn get_payment_page(
 {
     let valid_payment = db.payment_db.lock().unwrap().iter().find(
         |payment_data| {
-            println!("{:?}",payment_data);
             payment_data.id==payment_id 
-            // &&
-            // payment_data.status==TransactionType::PENDING
+            &&
+            payment_data.status==TransactionType::PENDING
         }).cloned(); 
         if let None = &valid_payment {
             let response_body = "<html><body><h1>Invalid payment link.</h1></body></html>".to_owned();
         return response_body;
         }
-        let response_body = "<html><body><h1>Payment page content.</h1></body></html>";
     return generate_payment_page(150.00, "USD",valid_payment.unwrap().id)
 
 }
@@ -238,9 +186,6 @@ pub async  fn make_payment_page(
     let valid_payment = db.payment_db.lock().unwrap().iter().find(
         |payment_data| payment_data.id==data.payment_id).cloned(); 
         
-
-        println!("make pay{:?}",valid_payment);
-
         if let None = &valid_payment {
         return Err(CustomError::BadRequest("Invalid payment id".to_string()))
         }

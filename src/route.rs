@@ -4,11 +4,9 @@ use rocket::{ State, serde::json::Json};
 
 use crate::{module::{response_handler::{generic_response, CustomError, CustomResult}, route_structure::{ApiResponse, FlightQueryParams, Booking, FlightIdData, PaymentCallbackUrl, BookingResponse, FlightOption}}, controller, model::AppState};
 
-// use crate::module::route_structure::Use;
 
 use rocket::response::content::RawHtml;
 
-// #[get("/flights<user..>" )]
 #[get("/flights?<params..>")]
 pub async fn get_flight_schedule(
         db:&State<AppState>,
