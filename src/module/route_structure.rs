@@ -160,9 +160,6 @@ pub struct FlightQueryParams {
 
 
 
-
-
-
 #[derive(Debug, Deserialize, Serialize,Clone)]
 
 pub struct FlightIdData {

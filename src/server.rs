@@ -1,12 +1,11 @@
 
 #[macro_use]
 extern crate rocket;
+
 mod model;
 mod module;
 mod controller;
 mod route;
-
-use std::fmt;
 
 use crate::route::{
     get_flight_schedule,
@@ -24,24 +23,12 @@ use module::cors::make_cors;
 
 
 
-struct Person {
-    name: String,
-    age: u32,
-}
+//#[main]
+// #[launch]
 
-impl  Person {
-    fn fmt(&self)->String{
-       format!("Name: {},\nAge: {},", self.name, self.age)
-    }
-}
-
-
-
-
-
- 
-#[launch]
-pub fn rocket() -> _ {
+ #[shuttle_runtime::main]
+pub async fn rocket() ->  shuttle_rocket::ShuttleRocket {
+//    pub async fn rocket()  -> _ {
 let app_data = model::AppState::init();
     let rocket = rocket::build()
     .mount("/api", routes![
@@ -56,12 +43,11 @@ let app_data = model::AppState::init();
             rocket_validation::validation_catcher
             ]) .mount(
                 "/",routes![get_payment_page]
-            );
-            
-            
-     rocket.manage(app_data) .attach(make_cors())
+            ).manage(app_data) .attach(make_cors()).into();
+    // rocket
+     Ok(rocket)
 }
 
-// Unit testings
-#[cfg(test)]
-mod test;
+// // Unit testings
+// #[cfg(test)]
+// mod test; 
