@@ -2,7 +2,7 @@
 use rocket::{ State, serde::json::Json};
  
 
-use crate::{module::{response_handler::{generic_response, CustomError, CustomResult}, route_structure::{ApiResponse, FlightQueryParams, Booking, FlightIdData, PaymentCallbackUrl, BookingResponse, FlightOption}}, controller, model::AppState};
+use crate::{module::{response_handler::{generic_response, CustomError, CustomResult}, route_structure::{FlightQueryParams, FlightIdData, PaymentCallbackUrl, BookingResponse, FlightOption}}, controller, model::AppState};
 
 
 use rocket::response::content::RawHtml;
@@ -76,7 +76,7 @@ pub async fn post_payment_page(
         db:&State<AppState>,
         data:Json<PaymentCallbackUrl>
 ) -> Result<CustomResult, CustomError>{
-       let response =  controller::make_payment_page(db, &data).await?;
+       let _response =  controller::make_payment_page(db, &data).await?;
        Ok(generic_response::<String>(
          "Payment made successfully.",
        None,

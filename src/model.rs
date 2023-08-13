@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use crate::{module::route_structure::{Booking, FlightData, Payment, ApiResponse}};
 
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::{Read};
 use serde_json::{ Error};
 use serde_json::from_str;
 

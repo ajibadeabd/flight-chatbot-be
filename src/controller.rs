@@ -93,7 +93,7 @@ let flight_data: Vec<FlightData>  = db.flight_data_db.lock().unwrap().data.clone
    let is_flight_available = flight_data.iter()
    .find(|&each_flight_data| each_flight_data.flight.number.as_ref()  == Some(&payload.flight_id) );
     match is_flight_available {
-        Some(dat)=>{
+        Some(_dat)=>{
             let booking_id = Uuid::new_v4().to_string();
             let new_booking = Booking {
                 flight_number:payload.flight_id.to_owned(),

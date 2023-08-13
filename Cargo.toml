@@ -36,3 +36,8 @@ features = ["tera_templates", "json"]
 [[bin]]
 name="app_entry_point"
 path="src/server.rs"
+
+
+
+[toolchain]
+channel = "nightly"
