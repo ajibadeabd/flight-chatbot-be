@@ -41,13 +41,17 @@ let app_data = model::AppState::init();
            not_found,
             internal_error,
             rocket_validation::validation_catcher
-            ]) .mount(
+            ]) 
+    .mount(
                 "/",routes![get_payment_page]
             ).manage(app_data) .attach(make_cors()).into();
     // rocket
      Ok(rocket)
 }
 
-// // Unit testings
-// #[cfg(test)]
-// mod test; 
+// // // Unit testings
+// // #[cfg(test)]
+// // mod test; 
+
+
+ 
